@@ -1,0 +1,71 @@
+C51 COMPILER V7.00  MAIN                                                                   06/05/2013 14:04:56 PAGE 1   
+
+
+C51 COMPILER V7.00, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE main.c ROM(COMPACT) BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+stmt level    source
+
+   1          #include"reg52.h"
+   2          #include "1602.h"
+   3          #include "uart.c"
+   4          #include "tc35.c"
+   5          
+   6          //#define RsBuf_N     50
+   7          
+   8          //char RsBuf[RsBuf_N];  //定义串口接收数据缓冲区
+   9          //uchar RsPoint=0;
+  10          uchar code PhoneNO[]= "+8618845146761";
+  11          uchar code Text[]= "I love apple";
+  12          uchar code center[]="+8613800451500";
+  13          
+  14          void main()
+  15          {
+  16   1      //  TC35_init();
+  17   1        Uart_init();
+  18   1        init_1602();
+  19   1        
+  20   1        Send_AT();
+  21   1        
+  22   1      
+  23   1        Set_MODE(1);     //设置短消息模式                                 
+  24   1        Set_CENTER(center);  // 设置短消息中心     AT+CSCA=“+8613800531500”回车
+  25   1        TransmitText(PhoneNO,Text);
+  26   1        
+  27   1        while(1);
+  28   1          //lcd_disp_str(RsBuf ,2);
+  29   1          
+  30   1      
+  31   1       }
+  32          
+  33           
+  34           
+  35          
+  36          
+  37           /*问题：
+  38             每次处理完数据。RsPoint是怎样清零的？？？？？在 准备发一个数据，然后接受一个数据 之前
+  39             RsBuf[RsPoint++]=SBUF;
+  40              RsBuf[RsPoint]=0x00;   //将下一个数据清零
+  41          
+  42              如果这个发送没问题。加删除，接收函数，参考桌面上的tc35.c
+  43          
+  44              添加液晶菜单的支持  ，类似手机
+  45          */
+  46           
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    910    ----
+   CONSTANT SIZE    =    292    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     51      33
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V7.00  MAIN                                                                   06/05/2013 14:04:56 PAGE 2   
+
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

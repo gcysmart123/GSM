@@ -1,0 +1,8 @@
+Name=ET-GPS3655
+Corporation=EchoTech
+Series=GPS
+Core=SIRF3,UBLOX5
+Version=1
+Communication=USB2SCI
+Communication=USB2SPI
+Communication=USB2IIC

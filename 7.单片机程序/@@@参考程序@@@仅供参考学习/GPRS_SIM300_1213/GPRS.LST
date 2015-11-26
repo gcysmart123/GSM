@@ -1,0 +1,253 @@
+C51 COMPILER V7.50   GPRS                                                                  12/15/2010 02:53:19 PAGE 1   
+
+
+C51 COMPILER V7.50, COMPILATION OF MODULE GPRS
+OBJECT MODULE PLACED IN GPRS.OBJ
+COMPILER INVOKED BY: D:\单片机\Keil2\C51\BIN\C51.EXE GPRS.C DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #include<absacc.h>
+   3          #include<stdio.h>
+   4          #include"code\ds1302.h"
+   5          #include"code\ds18b20.h"
+   6          #include"code\1602.h"
+*** WARNING C259 IN LINE 110 OF CODE\1602.H: pointer: different mspace
+   7          #include"code\12864.h"
+   8          #define uint unsigned int
+   9          #define uchar unsigned char
+  10          #define LCD_SELECT 0x01
+  11          #define RST      0X01
+  12          #define CMGF     0X02
+  13          #define CMGD     0X03
+  14          #define CREG     0X04
+  15          #define CMGR     0X05
+  16          #define CMGS     0X06
+  17          #define CSCA     0X07
+  18          #define ATDAT    0X08
+  19          #define TC35RET  0X00
+  20          sbit IGT=P1^3;
+  21          sbit RELAY=P1^1;
+  22          //sbit RTIR=P2^0;   //人体感应
+  23          bit IR_FLAG,IR_NUM;
+  24          uchar a,b,c,d,C_TEMP,display_time;
+  25          uint temp;
+  26          
+  27          //int sum=0,sum1=0;
+  28          //uchar code tab[]={0x03,0x9f,0x25,0x0d,0x99,0x49,0x41,0x1f,0x01,0x09,0xfd,0xff};//0-9,-,全灭 (共阳字段表)
+  29          //---------------1602----------------------
+  30          uchar code   GSM_START[17]={"GSM START!      "};
+  31          uchar code  GSM_START1[17]={"GSM START!!     "};
+  32          uchar code  GSM_START2[17]={"GSM START!!!    "};
+  33          uchar code      ATE_OK[17]={"ATE0 OK!        "};
+  34          uchar code   ATCMGF_OK[17]={"TEXT MODE OK!   "};
+  35          uchar code  ATCREG1_OK[17]={"NET CONNECT OK! "};
+  36          uchar code  ATCREG2_OK[17]={"NET CONNECTING! "};
+  37          uchar code   ATCSCA_OK[17]={"CENTER NUM OK!  "};
+  38          uchar code   ATCMGS_OK[17]={"PHONE NUM OK!   "};
+  39          uchar code    ATGSM_OK[17]={"GSM SEND OK!    "};
+  40          //----------------------------------------------------------------
+  41          uchar code   GSM_START_12864[17]={"模块启动中!     "};
+  42          uchar code  GSM_START1_12864[17]={"模块启动中!!    "};
+  43          uchar code  GSM_START2_12864[17]={"模块启动完毕!!! "};
+  44          uchar code      ATE_OK_12864[17]={"模块启动成功!   "};
+  45          uchar code   ATCMGF_OK_12864[17]={"设置文本模式!   "};
+  46          uchar code  ATCREG1_OK_12864[17]={"网络连接成功!   "};
+  47          uchar code  ATCREG2_OK_12864[17]={"网络连接中。。。"};
+  48          uchar code   ATCSCA_OK_12864[17]={"中心号设置完成! "};
+  49          uchar code  ATCSCA2_OK_12864[17]={"中心号设置中。。"};
+  50          uchar code   ATCMGS_OK_12864[17]={"目标号码完成!   "};
+  51          uchar code    ATGSM_OK_12864[17]={"短信发送成功!   "};
+  52          //----------------------------------------------------------------
+  53          uchar code   ATGPRS_QD_12864[17]={"GPRS启动!       "};
+  54          uchar code   ATGPRS_JH_12864[17]={"场景设置!       "};
+C51 COMPILER V7.50   GPRS                                                                  12/15/2010 02:53:19 PAGE 2   
+
+  55          uchar code   ATGPRS_DK_12864[17]={"端口设置!       "};
+  56          uchar code   ATGPRS_BJ_12864[17]={"本机IP设置!     "};
+  57          uchar code   ATGPRS_CX_12864[17]={"本机IP查询!     "};
+  58          uchar code   ATGPRS_JX_12864[17]={"解析域名!       "};
+  59          uchar code  ATGPRS_TCP_12864[17]={"短信发送成功!   "};
+  60          //----------------------------------------------------------------
+  61          uchar code    ATGPRS_QD_1602[17]={"GPRS START!     "};
+  62          uchar code  ATGPRS_QD_1602_1[17]={"GPRS RESTART!   "};
+  63          uchar code    ATGPRS_JH_1602[17]={"ACT OK!         "};
+  64          uchar code  ATGPRS_JH_1602_1[17]={"ACT RESET!      "};
+  65          uchar code    ATGPRS_DK_1602[17]={"COM OK!         "};
+  66          uchar code    ATGPRS_BJ_1602[17]={"IP SET!         "};
+  67          uchar code    ATGPRS_CX_1602[17]={"IP FOUND!       "};
+  68          uchar code    ATGPRS_JX_1602[17]={"IP SEARCH!      "};
+  69          uchar code   ATGPRS_TCP_1602[17]={"GPRS OK!        "}; 
+  70          uchar code ATGPRS_TCP_1602_1[17]={"GPRS ERROR!     "}; 
+  71          //------------------12864------------------//
+  72          uchar str0[16]={"TIME:00:00:00   "};
+  73          uchar str1[16]={"TEMP:000.0C     "};
+  74          //uchar str0[]={"TIME:00:00:00"};
+  75          //uchar str1[]={"TEMP:000.0C"};
+  76          
+  77          
+  78          void initLCM( void);                                                                                                    //LCD初始化子程序
+  79          void lcd_wait(void);                                                                                                    //LCD检测忙子程序
+  80          void WriteCommandLCM(uchar WCLCM,uchar BusyC);                              //写指令到ICM子函数
+  81          void WriteDataLCM(uchar WDLCM);                                             //写数据到LCM子函数
+  82          void DisplayOneChar(uchar X,uchar Y,uchar DData);                           //显示指定坐标的一个字符子函数
+  83          void DisplayListChar(uchar X,uchar Y,uchar *DData);                    //显示指定坐标的一串字符子函数
+  84          
+  85          void ATE0(void);
+  86          void delay_GSM(uint);
+  87          void init_serialcom( void );
+  88          void send_uart( unsigned char);
+  89          /*
+  90          void ATNAME(void);
+  91          void AT_CMGS(void);
+  92          void AT_CSCA(void);
+  93          void AT_RST(void);
+  94          void AT_CREG(void);
+  95          void AT_CMGF(void);
+  96          void AT_CMGR(void);
+  97          void AT_CMGD(void);*/
+  98          unsigned int ReadTemperature(void);
+  99          
+ 100          void Init_T0 (void)   
+ 101          {           
+ 102   1          TMOD = 0x21;   
+ 103   1          TH0 = (65536-10000) /256; 
+ 104   1          TL0 = (65536-10000) %256;
+ 105   1          EA = 1;      
+ 106   1          ET0 = 1;
+ 107   1          TR0 = 1;      
+ 108   1      }
+ 109          void Time0_ISR(void)  interrupt 1    using 0
+ 110          {  
+ 111   1       TH0 = (65536-10000) /256; //初始值
+ 112   1       TL0 = (65536-10000) %256; 
+ 113   1      C_TEMP++;
+ 114   1      
+ 115   1      }
+ 116          
+C51 COMPILER V7.50   GPRS                                                                  12/15/2010 02:53:19 PAGE 3   
+
+ 117          //显示时间和温度
+ 118          
+ 119          void LCD_SCREEN()
+ 120          {
+ 121   1      
+ 122   1      temp=readtemperature();
+*** WARNING C206 IN LINE 122 OF GPRS.C: 'readtemperature': missing function-prototype
+ 123   1      b=ReadTimeValue(0X81);
+ 124   1      c=ReadTimeValue(0X83);
+ 125   1      d=ReadTimeValue(0X85);
+ 126   1      str0[5]=d/0x10+0x30;
+ 127   1      str0[6]=d%0x10+0x30;
+ 128   1      str0[8]=c/0x10+0x30;
+ 129   1      str0[9]=c%0x10+0x30;
+ 130   1      str0[11]=b/0x10+0x30;
+ 131   1      str0[12]=b%0x10+0x30;
+ 132   1      a=(temp-(temp&10))/10;
+ 133   1      str1[5]=(a/100)+0x30;
+ 134   1      str1[6]=(a/10)+0x30;
+ 135   1      str1[7]=(a%10)+0x30;
+ 136   1      str1[9]=(temp%10)+0x30;
+ 137   1      C_TEMP=0;
+ 138   1      //IR_TEST();
+ 139   1      if(LCD_SELECT==0x01)
+ 140   1      {LCD(str0, str1);;}
+ 141   1      else if(LCD_SELECT==0x02)
+ 142   1      {
+ 143   2      LCD_12864_DISPLAY(0,0,str0);
+ 144   2      LCD_12864_DISPLAY(0,1,str1);
+ 145   2      }
+ 146   1      }
+ 147          #include"code\GPRS_SIM300.H"
+ 148          main()
+ 149          {//P1=0X00;
+ 150   1      //--------初始化-------------------
+ 151   1      RELAY=0;
+ 152   1      //RTIR=0;
+ 153   1      init_serialcom(); //设定串口工作方式
+ 154   1      //Init_T0();        //设定定时器工作方式
+ 155   1      InitDS1302();     //设定DS1302工作方式
+ 156   1      lcd_init();       //设定液晶工作方式
+ 157   1      
+ 158   1      //---------------------------------
+ 159   1      //-------启动GSM/GPRS模块--------------
+ 160   1      /*
+ 161   1      if(LCD_SELECT==0x01)
+ 162   1      {LCD(str0, str1);;}
+ 163   1      else if(LCD_SELECT==0x02)
+ 164   1      {
+ 165   1      LCD_12864_DISPLAY(0,0,str0);
+ 166   1      LCD_12864_DISPLAY(0,1,str1);
+ 167   1      }
+ 168   1      //------------------
+ 169   1      LCD_SCREEN();           //显示温度和时间
+ 170   1      delay_GSM(100);
+ 171   1      LCD_SCREEN();
+ 172   1      //-------启动GSM/GPRS模块--------------
+ 173   1      if(LCD_SELECT==0x01)
+ 174   1      {LCD(str0, GSM_START);}
+ 175   1      else if(LCD_SELECT==0x02)
+ 176   1      {LCD_12864_DISPLAY(0,2,GSM_START_12864);}
+ 177   1      //------------------
+C51 COMPILER V7.50   GPRS                                                                  12/15/2010 02:53:19 PAGE 4   
+
+ 178   1      delay_GSM(100);
+ 179   1      IGT=0;
+ 180   1      delay_GSM(100);
+ 181   1      IGT=1; 
+ 182   1      LCD_SCREEN();
+ 183   1      //-------启动GSM/GPRS模块--------------
+ 184   1      if(LCD_SELECT==0x01)
+ 185   1      {LCD(str0, GSM_START1);}
+ 186   1      else if(LCD_SELECT==0x02)
+ 187   1      {LCD_12864_DISPLAY(0,2,GSM_START1_12864);}
+ 188   1      //------------------
+ 189   1      delay_GSM(100);
+ 190   1      TC35_MAX=0;
+ 191   1      ATE0();
+ 192   1      delay_GSM(100);
+ 193   1      //-------启动GSM/GPRS模块--------------
+ 194   1      if(LCD_SELECT==0x01)
+ 195   1      {LCD(str0, GSM_START2);}
+ 196   1      else if(LCD_SELECT==0x02)
+ 197   1      {LCD_12864_DISPLAY(0,2,GSM_START2_12864);}
+ 198   1      //------------------
+ 199   1      for(i_TC35=0;i_TC35<=29;i_TC35++)
+ 200   1      {TC35_RE[i_TC35]=0;}
+ 201   1      i_TC35_RECE=0;
+ 202   1      TC35_MAX=0;
+ 203   1      ATE0();
+ 204   1      delay_GSM(100);
+ 205   1      for(i_TC35=0;i_TC35<=29;i_TC35++)
+ 206   1      {TC35_RE[i_TC35]=0;}
+ 207   1      i_TC35_RECE=0;
+ 208   1      TC35_MAX=0;
+ 209   1      */
+ 210   1      ATE0();
+ 211   1      //-------主程序--------------
+ 212   1      while(1)
+ 213   1      {
+ 214   2      
+ 215   2      SEND_MESSAGE();
+ 216   2      
+ 217   2      //GPRS_COM();
+ 218   2      
+ 219   2      }
+ 220   1      }
+ 221          
+ 222          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2212    ----
+   CONSTANT SIZE    =    807    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     76      35
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)

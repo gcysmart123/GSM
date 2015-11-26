@@ -1,0 +1,17 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+E:\!淘宝在售宝贝！！！\GSM配合例程\STC12C5A60S2配合GSM模块打电话 打后while死循环\STC12C5A60S2_TEST.uvproj
+Project File Date:  02/15/2014
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+compiling STC12C5A60S2_TEST.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PRINTF1?STC12C5A60S2_TEST
+Program Size: data=124.0 xdata=0 code=677
+creating hex file from "STC12C5A60S2_TEST"...
+"STC12C5A60S2_TEST" - 0 Error(s), 1 Warning(s).
